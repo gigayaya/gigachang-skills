@@ -1,0 +1,13 @@
+{
+  "name": "daily-skill-plugin",
+  "owner": {
+    "name": "GigaChang"
+  },
+  "plugins": [
+    {
+      "name": "daily-skill-plugin",
+      "source": "./",
+      "description": "A collection of skills for personal daily workflows"
+    }
+  ]
+}

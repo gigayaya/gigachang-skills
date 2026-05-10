@@ -1,0 +1,10 @@
+{
+  "name": "daily-skill-plugin",
+  "version": "0.1.0",
+  "description": "A collection of skills for personal daily workflows",
+  "author": {
+    "name": "GigaChang"
+  },
+  "license": "MIT",
+  "keywords": ["productivity", "workflow", "daily"]
+}
