@@ -1,6 +1,6 @@
 ---
 name: session-reflection
-description: Use when the user explicitly asks to reflect on, review, or learn from the current Claude Code session — e.g. "反省", "檢討這次 session", "review this session", "why did that take so many tries", "what went wrong this session", or asks to turn this session's mistakes into project rules. Reads the session transcript, finds where Claude's output was rejected or required correction, distills the root causes, and proposes concrete project rules — integrating them into the project's existing rule system (CLAUDE.md, AGENTS.md, …) or proposing a simple one if none exists. Manual-trigger only — never auto-invoke; never write rule files without explicit user approval.
+description: Use when the user explicitly asks to reflect on, review, or learn from the current Claude Code session — e.g. "review this session", "reflect on this session", "why did that take so many tries", "what went wrong this session", or asks to turn this session's mistakes into project rules. Reads the session transcript, finds where Claude's output was rejected or required correction, distills the root causes, and proposes concrete project rules — integrating them into the project's existing rule system (CLAUDE.md, AGENTS.md, …) or proposing a simple one if none exists. Manual-trigger only — never auto-invoke; never write rule files without explicit user approval.
 ---
 
 # Session Reflection
@@ -15,7 +15,7 @@ into rules that make the next session smoother.
 
 ## When to invoke
 
-- **Manual only.** The user explicitly asks to reflect / review / 檢討 the
+- **Manual only.** The user explicitly asks to reflect on or review the
   session, or to turn its mistakes into rules.
 - **Never auto-invoke**, and never edit any file until the user approves.
 
@@ -49,8 +49,9 @@ tool calls, and results, with friction points flagged:
 Identify each **episode** where Claude's output was rejected, errored, or the
 user had to ask for a correction or redo. The script flags rejections and
 errors mechanically; **user corrections are a judgment call** — read the
-wording of user prompts that follow Claude's work (e.g. "不對，改成…", "no, do
-it differently", a re-prompt repeating the request) and decide.
+wording of user prompts that follow Claude's work (e.g. "no, do it
+differently", "that's not what I meant", a re-prompt repeating the request)
+and decide.
 
 Ignore the final user prompt that triggered this reflection — it is not
 friction.

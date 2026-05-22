@@ -281,11 +281,11 @@ def _build_tooltip_html(plain: str, analogy: str) -> str:
     plain_esc = html_lib.escape(plain or "")
     parts = [
         '<span class="gloss__tip" role="tooltip">',
-        '<span class="gloss__tip-label">白話 · Plain</span>',
+        '<span class="gloss__tip-label">Plain</span>',
         plain_esc,
     ]
     if analogy:
-        parts.append('<span class="gloss__tip-label gloss__tip-label--alt">類比 · Analogy</span>')
+        parts.append('<span class="gloss__tip-label gloss__tip-label--alt">Analogy</span>')
         parts.append(html_lib.escape(analogy))
     parts.append('</span>')
     return "".join(parts)

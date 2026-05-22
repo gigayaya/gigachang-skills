@@ -1,11 +1,11 @@
-# session-reflection（反省）
+# session-reflection
 
 Look back over the current Claude Code session, find where Claude's output was
 **rejected or required the user to ask for changes**, distill *why* it wasn't
 right the first time, and propose concrete **project rules** so the same
 mistake doesn't happen next session.
 
-Triggered manually when you ask Claude to reflect on / 檢討 the session. It
+Triggered manually when you ask Claude to reflect on the session. It
 never auto-runs and never writes rule files without your approval.
 
 ## How Claude uses it
