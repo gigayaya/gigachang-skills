@@ -7,6 +7,7 @@ A personal collection of [Claude Code](https://docs.claude.com/en/docs/claude-co
 | Skill | What it does |
 |---|---|
 | [markdown-to-html-report](./skills/markdown-to-html-report/) | Converts long AI-generated markdown (code reviews, plans, specs) into a single self-contained HTML report — TL;DR, sticky TOC, semantic callouts, syntax highlighting, mermaid diagrams, dark mode |
+| [session-reflection](./skills/session-reflection/) | Reflects on the current session — finds where Claude's output was rejected or corrected, distills the root causes, and proposes project rules (into `CLAUDE.md` or your existing rule system) so the same mistake doesn't recur. No dependencies |
 
 ---
 
