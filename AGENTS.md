@@ -1,4 +1,4 @@
-# CLAUDE.md
+# AGENTS.md
 
 `gigachang-skills` is a Claude Code plugin that bundles some engineering skills. These projects provide features aimed at helping software engineers better leverage AI for coding in their work.
 
