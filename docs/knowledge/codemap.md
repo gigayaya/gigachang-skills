@@ -8,6 +8,12 @@
 | `.claude-plugin/marketplace.json` | Single-plugin marketplace entry | Changing how the plugin is installable |
 | `README.md` | User-facing overview + canonical Repository layout tree | Reference when uncertain about the full file tree |
 
+## Dev tooling (this repo only)
+
+| Path | What it is | When to read |
+|---|---|---|
+| `.claude/hooks/check-skill-completion.sh` | Stop hook — when a new `skills/*/SKILL.md` is added in a turn, verifies that the matching `commands/*.md`, `docs/knowledge/codemap.md`, and `README.md` are also touched; `exit 2` with hints if any is missing | Changing what counts as "skill is fully wired up", or debugging why the hook fires |
+
 ## Skill indexes
 
 | Skill | Index | What it does |
