@@ -1,9 +1,9 @@
 ---
-name: adversarial-code-review
-description: Use when the user explicitly asks for an adversarial, two-sided, "AB", or "red-team" code review of code changes they have made — e.g. "adversarial review my diff", "do an AB review of my changes", "red-team this code change", "have two reviewers argue about my code". Dispatches two opposing sub-agents — one building the evidence-based case that the change is mergeable, one building the case that it must not merge — runs them in parallel, and returns both reports to the main agent to judge. The skill itself never issues the verdict. Manual-trigger only — never auto-invoke; always ask the user to choose the review scope first. Skip for a routine single-perspective code review.
+name: ab-review
+description: Use when the user explicitly asks for an "AB", adversarial, two-sided, or "red-team" code review of code changes they have made — e.g. "AB review my diff", "do an AB review of my changes", "red-team this code change", "have two reviewers argue about my code". Dispatches two opposing sub-agents — one building the evidence-based case that the change is mergeable, one building the case that it must not merge — runs them in parallel, and returns both reports to the main agent to judge. The skill itself never issues the verdict. Manual-trigger only — never auto-invoke; always ask the user to choose the review scope first. Skip for a routine single-perspective code review.
 ---
 
-# Adversarial Code Review
+# AB Review
 
 Two sub-agents with opposing assigned stances independently review the **same**
 code change and report concrete evidence. One argues the change is mergeable,
@@ -18,8 +18,8 @@ in hand.
 
 ## When to invoke
 
-- **Manual only.** The user explicitly asks for an adversarial / AB / two-sided
-  / red-team review of their code changes.
+- **Manual only.** The user explicitly asks for an AB / adversarial /
+  two-sided / red-team review of their code changes.
 - **Never auto-invoke.** Dispatching two sub-agents is expensive; wait for an
   explicit request.
 - The skill and the sub-agents **never pronounce the final verdict** — that is

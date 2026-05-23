@@ -8,7 +8,7 @@ A personal collection of [Claude Code](https://docs.claude.com/en/docs/claude-co
 |---|---|
 | [markdown-to-html-report](./skills/markdown-to-html-report/) | Converts long AI-generated markdown (code reviews, plans, specs) into a single self-contained HTML report — TL;DR, sticky TOC, semantic callouts, syntax highlighting, mermaid diagrams, dark mode |
 | [session-reflection](./skills/session-reflection/) | Reflects on the current session — finds where Claude's output was rejected or corrected, distills the root causes, and proposes project rules (into `CLAUDE.md` or your existing rule system) so the same mistake doesn't recur. No dependencies |
-| [adversarial-code-review](./skills/adversarial-code-review/) | Two-sided "AB" code review — dispatches a Pro reviewer (arguing the change is mergeable) and a Con reviewer (arguing it is not) in parallel, each citing concrete evidence from the diff, then hands both reports to the main agent to judge. Manual-trigger, no dependencies |
+| [ab-review](./skills/ab-review/) | Two-sided "AB" code review — dispatches a Pro reviewer (arguing the change is mergeable) and a Con reviewer (arguing it is not) in parallel, each citing concrete evidence from the diff, then hands both reports to the main agent to judge. Manual-trigger, no dependencies |
 
 ---
 

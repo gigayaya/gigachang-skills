@@ -3,7 +3,7 @@ description: Two opposing sub-agents review the same diff (pro-merge vs. block-m
 argument-hint: "[optional scope, e.g. 'staged changes', 'PR #42', or a path]"
 ---
 
-Invoke the `adversarial-code-review` skill on the user's code change.
+Invoke the `ab-review` skill on the user's code change.
 
 Scope (if provided): $ARGUMENTS
 

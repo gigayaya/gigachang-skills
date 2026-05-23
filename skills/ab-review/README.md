@@ -1,4 +1,4 @@
-# adversarial-code-review
+# ab-review
 
 A two-sided **"AB" code review**. After you finish a task and make code
 changes, invoke this skill to get an adversarial review: Claude dispatches two
@@ -12,7 +12,7 @@ A single-perspective review tends to anchor on one read of a change. Splitting
 it into a strongest-case-for and a strongest-case-against surfaces both the
 strengths and the risks a one-sided pass would miss.
 
-Triggered manually when you ask Claude for an adversarial / AB / two-sided /
+Triggered manually when you ask Claude for an AB / adversarial / two-sided /
 red-team review of your changes. It never auto-runs.
 
 ## How Claude uses it
@@ -46,7 +46,7 @@ step and no runtime script.
 ## File layout
 
 ```
-adversarial-code-review/
+ab-review/
 ├── SKILL.md     # skill description + workflow
 └── README.md    # this file
 ```
