@@ -1,6 +1,6 @@
 {
-  "name": "daily-skill-plugin",
-  "version": "0.6.0",
+  "name": "gigachang-skills",
+  "version": "0.7.0",
   "description": "A collection of skills for personal daily workflows",
   "author": {
     "name": "GigaChang"

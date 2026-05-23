@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-`daily-skill-plugin` is a Claude Code **plugin** that bundles personal-workflow
+`gigachang-skills` is a Claude Code **plugin** that bundles personal-workflow
 skills. It is not an application: there is no build step, server, or test
 framework. "Running" the project means running a skill's standalone script, or
 having Claude Code invoke a skill.
