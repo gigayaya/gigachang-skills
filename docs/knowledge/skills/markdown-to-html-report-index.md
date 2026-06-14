@@ -4,7 +4,8 @@ Converts long markdown into a self-contained magazine-style HTML report (TL;DR h
 
 | Path | What it is | When to read |
 |---|---|---|
-| `skills/markdown-to-html-report/SKILL.md` | Frontmatter + workflow: metadata schema, SVG rules, language handling, render command syntax | Adjusting trigger conditions, metadata spec, or language logic |
+| `skills/markdown-to-html-report/SKILL.md` | Frontmatter + orchestration workflow: resolve source → dispatch analyst → render → report | Adjusting trigger conditions or the orchestration flow |
+| `agents/markdown-report-analyst.md` | Sub-agent that owns Step 2: reads/understands/rewrites the article and writes `metadata.json` (carries the metadata schema, body-rewriting rules, SVG rules, language handling) | Changing how the article is understood or rewritten — rewrite intensity, metadata spec, SVG/glossary rules |
 | `skills/markdown-to-html-report/README.md` | User-facing docs, standalone CLI usage, dependency setup | Changing user-visible behaviour or install steps |
 | `commands/html-report.md` | Slash command `/html-report` that invokes this skill | Renaming the command, editing its `description` / `argument-hint` / invocation prompt |
 | `skills/markdown-to-html-report/scripts/render_report.py` | Main renderer: reads markdown + metadata.json, emits self-contained HTML (sanitize, tooltip, SVG hero) | Changing transformation logic, fixing script bugs |

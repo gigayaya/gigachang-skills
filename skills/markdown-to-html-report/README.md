@@ -51,11 +51,11 @@ pip install -r .../requirements.txt
 
 ## How Claude uses it
 
-1. Claude reads the source markdown and produces a `metadata.json` (TL;DR, per-section overviews, must-read quotes, callouts, concept explanations, optional auto-generated mermaid diagrams, next actions). Schema is documented in [`SKILL.md`](./SKILL.md).
-2. The renderer script reads both files and emits a self-contained HTML.
-3. Claude reports the `file://` path back to the user.
+1. The skill dispatches the bundled **`markdown-report-analyst` sub-agent**, which reads the source markdown and produces a `metadata.json`. Crucially, this includes a **rewritten prose `body_markdown` for each section** — the source is distilled and re-authored into flowing article prose, not copy-pasted. The metadata also carries the TL;DR, per-section overviews, sparing must-read quotes, callouts, concept explanations, optional auto-generated mermaid diagrams, and next actions. The agent and the metadata schema are documented in [`agents/markdown-report-analyst.md`](../../agents/markdown-report-analyst.md).
+2. The renderer script reads the source plus `metadata.json` and emits a self-contained HTML, using each section's `body_markdown` as the body (falling back to a verbatim slice of the source only when a section omits it). Code blocks are always reproduced verbatim.
+3. The main agent runs the renderer and reports the `file://` path back to the user.
 
-The split is deliberate: LLM does the *understanding*, the script does the *transformation*. Adds a clean contract between the two and keeps the script unit-testable.
+The split is deliberate and now three-way: the **analyst sub-agent** does the *understanding and editing* (it rewrites the prose), the **script** does the deterministic *transformation* (markdown → safe, styled HTML), and the **skill** orchestrates the two. The `metadata.json` is the clean contract between them, which keeps the script unit-testable and the comprehension work isolated in its own agent context.
 
 ## File layout
 

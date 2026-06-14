@@ -7,6 +7,8 @@ description: Use when about to present long or complex AI-generated markdown to 
 
 Turn long AI-generated markdown into a human-friendly self-contained HTML report — designed to minimize reader cognitive load via TL;DR, collapsible sections, semantic colors, and inline concept explanations.
 
+**This skill rewrites, it does not photocopy.** The source markdown is raw material, not the final body. Each section is re-authored into flowing prose that reads like a well-edited tech article — not a bullet dump. The work splits in three: the `markdown-report-analyst` sub-agent does the *understanding and editing* (it reads the source and produces the rewritten `metadata.json`), the renderer does the deterministic HTML *transformation*, and this skill *orchestrates* the two. Copy-pasting the source verbatim into the report is the single most common failure mode and is explicitly wrong.
+
 ## When to invoke
 
 **Auto-trigger heuristic** (use judgment, not strict thresholds):
@@ -32,93 +34,19 @@ The source can be:
 
 Note the `markdown_dir` (parent of the markdown file) — it's used to resolve relative image paths.
 
-### Step 2 — Detect language and produce metadata
+### Step 2 — Dispatch the analyst sub-agent (understand + rewrite + metadata)
 
-Read the markdown carefully. Detect its primary language (zh-TW, en, ja, …). **All LLM-produced text in metadata MUST be in the same language as the source.** Then produce a `metadata.json` matching this schema:
+The comprehension-heavy half — reading the source, understanding it, re-authoring each section into distilled prose, and producing `metadata.json` — is delegated to the bundled `markdown-report-analyst` sub-agent. You do **not** read and rewrite the article yourself.
 
-```jsonc
-{
-  "title": "string — the document's main title",
-  "slug": "kebab-case-from-title (used in output filename)",
-  "lang": "zh-TW | en | ...",
-  "tldr": "string — 1-3 sentences capturing the entire document",
-  "estimated_read_minutes": 12,
+In a single `Agent` call, dispatch `subagent_type: markdown-report-analyst` and pass it:
 
-  // Hero illustration shown right under the title. REQUIRED for any report
-  // long enough to warrant this skill — the report opens with a visual,
-  // not a wall of text. Prefer hero_image_svg (inline, self-contained).
-  "hero_image_svg": "string — inline <svg>…</svg> markup. See rules below.",
-  "hero_image_path": "string (optional) — relative path to an existing png/jpg/svg next to the source markdown. If set, wins over hero_image_svg.",
+- the **markdown source path** from Step 1,
+- the **`markdown_dir`** (parent of the source, for resolving relative image paths),
+- the **metadata output path** it must write: `./claude-reports/.tmp-report.json`.
 
-  "sections": [
-    {
-      "id": "stable-anchor-id-from-heading",
-      "heading": "exact text of the markdown heading (used to slice the markdown)",
-      "level": 1-6,
-      "importance": 1 | 2 | 3,
-      "type": "intro | finding | action | reference | warning | note | code | idea | bug | good",
-      "summary": "string — 1-2 sentence editorial lead-in shown above the section body (italic, not a card)",
-      "must_read_quotes": ["VERBATIM strings copied from this section's body that the reader must not skim past"],
-      "estimated_minutes": 2
-    }
-  ],
-  "callouts": [
-    { "section_id": "...", "level": "critical | warning | info | good | note", "text": "..." }
-  ],
-  "concepts": [
-    {
-      "term": "exact term as it appears in text — every occurrence in the body gets an inline hover tooltip",
-      "plain_explanation": "plain-language explanation in source language (rendered as plain text inside the tooltip)",
-      "analogy": "concrete analogy a fresh CS grad would understand"
-    }
-  ],
-  "auto_diagrams": [
-    {
-      "after_section_id": "section_id",
-      "title": "optional caption",
-      "mermaid_code": "sequenceDiagram\\n  Alice->>Bob: Hi"
-    }
-  ],
-  "next_actions": [
-    "Action-oriented suggestion for the reader (e.g. 'If you're the reviewer, look at #2 and #5 first')"
-  ]
-}
-```
+The agent already carries the full contract — the metadata schema, the body-rewriting rules, the hero-SVG rules, the glossary/diagram rules, the same-language rule, and the no-fabrication rule — defined in `agents/markdown-report-analyst.md`. **Do not re-specify any of that here, and do not do the rewriting yourself.**
 
-**Rules for high-quality metadata:**
-
-1. `heading` must match a real heading in the markdown EXACTLY (whitespace, punctuation, casing) — the script slices the file by heading text. If two sections share the same heading, append a discriminator like ` (cont.)` to one and update the markdown.
-2. `id` must be unique, lowercase, kebab-case.
-3. `must_read_quotes` must be COPIED verbatim from the body of that section. Pick 3-5 sentences max per section. Choose load-bearing claims, not boilerplate.
-4. `importance`: 3 = must read; 2 = should read; 1 = optional / supplementary.
-5. `type` controls the icon and a subtle accent on the heading. Pick the closest match.
-6. `auto_diagrams` — only add when the section describes a sequence/flow/state machine in prose that would genuinely be clearer as a diagram. Don't generate diagrams for content that's already a list or table.
-7. `concepts` — **every occurrence** of every term in the body will be wrapped in an inline hover tooltip (mouse-hover or keyboard-focus reveals it; no scrolling). Only include terms that are jargon, project-specific, or non-obvious. Don't gloss common words — over-glossing clutters the prose. The bottom-of-page Glossary list is still rendered as a printable / Ctrl-F-friendly index.
-8. `hero_image_svg` — generate a tasteful inline SVG banner that visually represents the report. Rules:
-   - `viewBox="0 0 1200 360"` (or similar wide aspect); width/height should be omitted or `100%`.
-   - 2-4 colors total. Geometric / minimal-illustrative style. Avoid clip-art realism.
-   - Embed the report title (or a short variant) as `<text>` inside the SVG.
-   - **No `<script>`, no `on*` event handlers, no external `href`/`src`.** The renderer sanitizes and will strip these.
-   - No `style="…"` attributes — use inline attrs (`fill="…"`, `stroke="…"`). The sanitizer drops `style`.
-   - Keep it under ~3 KB. The whole thing is inlined into the HTML.
-   - Minimal example (adapt — DO NOT just copy):
-     ```svg
-     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" role="img" aria-label="Report banner">
-       <defs>
-         <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-           <stop offset="0" stop-color="#0ea5e9"/>
-           <stop offset="1" stop-color="#6366f1"/>
-         </linearGradient>
-       </defs>
-       <rect width="1200" height="360" fill="url(#g)"/>
-       <circle cx="200" cy="180" r="120" fill="#fff" fill-opacity="0.10"/>
-       <text x="60" y="200" font-family="Georgia, serif" font-size="56" font-weight="700" fill="#fff">Report Title</text>
-       <text x="60" y="250" font-family="sans-serif" font-size="20" fill="#fff" fill-opacity="0.85">One-line subtitle</text>
-     </svg>
-     ```
-9. Language: if the source is Chinese, all `tldr`, `summary`, `plain_explanation`, `analogy`, `next_actions` (and any embedded SVG text) MUST be in the source language.
-
-Write metadata to `./claude-reports/.tmp-<slug>.json`.
+When it returns, it reports the metadata path it wrote, the `slug` it chose, the section count, estimated read minutes, and the must-read/diagram counts. Use the metadata path and slug in Step 3, and the counts in your Step 4 message.
 
 ### Step 3 — Run the renderer
 
@@ -129,15 +57,15 @@ pip install -r ${CLAUDE_PLUGIN_ROOT}/skills/markdown-to-html-report/scripts/requ
 
 If `pip install` fails or dependencies are missing, ask the user to run the install command themselves before proceeding.
 
-Then render:
+Then render, using the metadata path the analyst wrote and the `<slug>` it returned:
 ```bash
 python ${CLAUDE_PLUGIN_ROOT}/skills/markdown-to-html-report/scripts/render_report.py \
   <markdown_path> \
-  ./claude-reports/.tmp-<slug>.json \
+  ./claude-reports/.tmp-report.json \
   ./claude-reports/$(date +%Y%m%d-%H%M%S)-<slug>.html
 ```
 
-The script prints the absolute output path on stdout.
+The script prints the absolute output path on stdout. The metadata contract is unchanged — the renderer behaves identically whether the metadata was authored inline or by the sub-agent.
 
 ### Step 4 — Cleanup and report
 
@@ -150,6 +78,7 @@ Example final message:
 
 ## Notes
 
+- **The analyst sub-agent owns Step 2.** Reading, understanding, and rewriting the article — plus authoring `metadata.json` — all live in `agents/markdown-report-analyst.md`. This skill orchestrates (resolve source → dispatch agent → render → report); it does not rewrite the article inline. If you need to change *how* the article is understood or rewritten (rewrite intensity, schema, SVG/glossary rules), edit the agent file, not this one.
 - The output is fully self-contained: opens offline, all CSS / JS / hero SVG inlined. Exception: image URLs (http/https) inside the markdown body remain as links and need network to display.
 - mermaid.js (~3 MB) is only inlined when the report actually contains diagrams — keep `auto_diagrams` empty if the content doesn't need diagrams.
 - highlight.js is only inlined when there's at least one code block.

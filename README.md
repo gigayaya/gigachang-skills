@@ -96,6 +96,7 @@ gigachang-skills/
 ├── agents/                        # plugin-bundled sub-agent definitions (auto-discovered)
 │   ├── ab-review-pro.md
 │   ├── ab-review-con.md
+│   ├── markdown-report-analyst.md
 │   └── scope-research-surveyor.md
 ├── commands/                      # slash-command definitions (auto-discovered)
 │   ├── ab-review.md

@@ -123,6 +123,10 @@ def read_metadata(path: Path) -> dict:
         s.setdefault("summary", "")
         s.setdefault("must_read_quotes", [])
         s.setdefault("estimated_minutes", 1)
+        # Refined prose body authored by the LLM. When present it REPLACES the
+        # verbatim slice of the source markdown for this section. Empty string
+        # falls back to slicing the original markdown by heading (legacy behavior).
+        s.setdefault("body_markdown", "")
     return data
 
 
@@ -401,10 +405,10 @@ def build(markdown_path: Path, metadata_path: Path, output_path: Path) -> Path:
     markdown_text = markdown_path.read_text(encoding="utf-8")
     meta = read_metadata(metadata_path)
 
-    # Pull mermaid blocks out so they don't get code-highlighted
-    markdown_text, _ = extract_mermaid(markdown_text)
-
-    # Sectionize
+    # Sectionize the ORIGINAL markdown. These slices are only used as a fallback
+    # for sections that don't supply a rewritten `body_markdown`. Mermaid blocks
+    # are pulled out per-section below (after the body source is chosen), so the
+    # rewritten-prose path and the legacy slice path get identical treatment.
     chunks = split_markdown_by_sections(markdown_text, meta["sections"])
 
     # Build per-section blocks
@@ -417,9 +421,17 @@ def build(markdown_path: Path, metadata_path: Path, output_path: Path) -> Path:
         section_diagrams.setdefault(d["after_section_id"], []).append(d)
 
     for s_meta, chunk in chunks:
-        # strip the heading line itself from the chunk (the template renders heading)
-        chunk_body = HEADING_RE.sub("", chunk, count=1) if chunk else ""
-        rendered = render_markdown_chunk(chunk_body)
+        # Prefer the LLM's rewritten prose body. Fall back to the verbatim slice
+        # of the source markdown (heading line stripped — the template renders it).
+        body_md = (s_meta.get("body_markdown") or "").strip()
+        if body_md:
+            body_source = body_md
+        else:
+            body_source = HEADING_RE.sub("", chunk, count=1) if chunk else ""
+        # Pull mermaid fences out so they aren't code-highlighted (applies to both
+        # the rewritten body and the legacy slice).
+        body_source, _ = extract_mermaid(body_source)
+        rendered = render_markdown_chunk(body_source)
         rendered = inline_local_images(rendered, markdown_path.parent)
         rendered = wrap_code_blocks(rendered)
         # Sanitize untrusted markdown-rendered HTML first, THEN inject our own
