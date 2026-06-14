@@ -12,6 +12,7 @@ Each skill auto-triggers when its `description` matches what you're asking for, 
 | [session-reflection](./skills/session-reflection/) | Reflects on the current session — finds where Claude's output was rejected or corrected, distills the root causes, and proposes project rules (into `CLAUDE.md` or your existing rule system) so the same mistake doesn't recur. No dependencies |
 | [ab-review](./skills/ab-review/) | Two-sided "AB" code review — dispatches a Pro reviewer (arguing the change is mergeable) and a Con reviewer (arguing it is not) in parallel, each citing concrete evidence from the diff, then verifies every cited snippet against the repo before the main agent judges. Manual-trigger, no dependencies |
 | [scope-research](./skills/scope-research/) | Surveys the codebase against a proposed requirement and reports the concrete facts a reader needs to assess scope themselves — affected files, callers, prior similar changes, current test state, conventions in use, with honest per-touchpoint LOC ranges. States facts only, never issues t-shirt sizes or risk ratings. Manual-trigger, no dependencies |
+| [docs-drift](./skills/docs-drift/) | Checks whether this plugin's own docs have drifted from its code — a deterministic script verifies the README/codemap/index catalogs, per-skill index files, relative links, the English-only rule, and version bumps, then the skill adds a semantic pass (doc descriptions vs actual behaviour) and proposes fixes. Also wired to a Stop hook for automatic mechanical checks. Manual-trigger, no dependencies |
 
 ---
 
@@ -53,7 +54,7 @@ pip install -r ${CLAUDE_PLUGIN_ROOT}/skills/markdown-to-html-report/scripts/requ
 
 For full setup options (uv, venv, troubleshooting), see [`skills/markdown-to-html-report/README.md`](./skills/markdown-to-html-report/README.md#required-dependencies).
 
-The other three skills (`session-reflection`, `ab-review`, `scope-research`) have no third-party dependencies — `session-reflection` and `ab-review` ship standard-library-only Python helpers (no install), and `scope-research` is pure LLM + built-in tools.
+The other four skills (`session-reflection`, `ab-review`, `scope-research`, `docs-drift`) have no third-party dependencies — `session-reflection`, `ab-review`, and `docs-drift` ship standard-library-only Python helpers (no install), and `scope-research` is pure LLM + built-in tools.
 
 ---
 
@@ -67,6 +68,7 @@ Every skill has a matching slash command so you can invoke it explicitly instead
 | `/reflect [focus]` | `session-reflection` | Reflect on this session and propose project rules |
 | `/ab-review [scope]` | `ab-review` | Run a two-sided adversarial review of your code changes |
 | `/scope-research [requirement]` | `scope-research` | Survey the codebase against a requirement and report touchpoints + facts |
+| `/docs-drift [path]` | `docs-drift` | Check whether the plugin's docs have drifted from its code and propose fixes |
 
 Each command accepts an optional argument (described in the command's `argument-hint`); leave it blank to use context already in the conversation.
 
@@ -78,7 +80,7 @@ Open a Claude Code session and ask:
 
 > List the skills you have available.
 
-All four skills (`markdown-to-html-report`, `session-reflection`, `ab-review`, `scope-research`) should appear in the list. To smoke-test `markdown-to-html-report` end-to-end, ask Claude to:
+All five skills (`markdown-to-html-report`, `session-reflection`, `ab-review`, `scope-research`, `docs-drift`) should appear in the list. To smoke-test `markdown-to-html-report` end-to-end, ask Claude to:
 
 > Convert this README into an HTML report.
 
@@ -100,6 +102,7 @@ gigachang-skills/
 │   └── scope-research-surveyor.md
 ├── commands/                      # slash-command definitions (auto-discovered)
 │   ├── ab-review.md
+│   ├── docs-drift.md
 │   ├── html-report.md
 │   ├── reflect.md
 │   └── scope-research.md
