@@ -23,7 +23,7 @@ in hand.
 - **Never auto-invoke.** Dispatching two sub-agents is expensive; wait for an
   explicit request.
 - The skill and the sub-agents **never pronounce the final verdict** — that is
-  the main agent's job (Step 5).
+  the main agent's job (Step 6), after the evidence is verified (Step 5).
 
 ## Workflow
 
@@ -79,19 +79,43 @@ Each agent returns a structured report (canonical format defined in its agent
 file): its side, a one-line position, numbered evidence items — each with a
 `file:line` location, a verbatim code snippet, an argument, and a strength
 rating — its single strongest point, and an honest statement of where its own
-side is weakest.
+side is weakest. Each report also ends with a **machine-readable JSON evidence
+block** (a `[...]` array under `## Evidence (machine-readable)`) mirroring the
+prose evidence — Step 5 uses it.
 
-### Step 5 — Judge (main agent)
+### Step 5 — Verify the cited evidence (mandatory)
 
-After both reports return, the main agent — **not a sub-agent, not the skill** —
+Both reviewers are assigned advocates, so their citations must be checked, not
+trusted. This step is **not optional**.
+
+1. From each report, extract the JSON array under
+   `## Evidence (machine-readable)` and write it to a temp file —
+   `./.tmp-ab-pro.json` and `./.tmp-ab-con.json`.
+2. Run the verifier (standard-library Python, no install needed):
+   ```bash
+   python ${CLAUDE_PLUGIN_ROOT}/skills/ab-review/scripts/verify_evidence.py \
+     --repo <repo_path> ./.tmp-ab-pro.json ./.tmp-ab-con.json
+   ```
+3. Read its output. Any item marked `SNIPPET_NOT_FOUND` or `FILE_NOT_FOUND` is
+   an unverified citation — **discount it in the judgment**, and discount it
+   heavily when its strength is `strong` (the script flags these and exits
+   non-zero). Treat only `VERIFIED` items as load-bearing.
+4. Delete the two temp files after reading the result.
+
+If a report omits or malforms its JSON block, verify that side's strongest
+claims manually with `Grep` before relying on them.
+
+### Step 6 — Judge (main agent)
+
+After verification, the main agent — **not a sub-agent, not the skill** —
 does the judging. Present to the user:
 
 1. The review scope that was reviewed.
 2. Pro's strongest evidence and Con's strongest evidence — concise, pointing to
    `file:line`.
 3. The main agent's own independent judgment: which evidence holds up under
-   scrutiny (verify the cited code directly if in doubt), and where the two
-   sides genuinely disagree.
+   scrutiny (built on the Step 5 verification — unverified citations carry no
+   weight), and where the two sides genuinely disagree.
 4. A clear recommendation — merge as-is / merge after specific fixes / do not
    merge — with concrete action items.
 
@@ -100,7 +124,8 @@ something that does not hold up, say so.
 
 ## Notes
 
-- No dependencies and no script — git plus the `Agent` tool only.
+- No third-party dependencies — git, the `Agent` tool, and one
+  standard-library Python script (`scripts/verify_evidence.py`) for Step 5.
 - The two reviewers are bundled plugin agents (`ab-review-pro`, `ab-review-con`,
   in `agents/`); they are review-only, with read-only file and git access.
 - Always exactly two sub-agents: one Pro, one Con.

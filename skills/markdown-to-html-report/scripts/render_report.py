@@ -49,9 +49,9 @@ CALLOUT_ICONS = {
 }
 
 ALLOWED_TAGS = [
-    "a", "abbr", "b", "blockquote", "br", "code", "del", "div", "em", "h1",
-    "h2", "h3", "h4", "h5", "h6", "hr", "i", "img", "kbd", "li", "mark", "ol",
-    "p", "pre", "s", "small", "span", "strong", "sub", "sup", "table",
+    "a", "abbr", "b", "blockquote", "br", "button", "code", "del", "div", "em",
+    "h1", "h2", "h3", "h4", "h5", "h6", "hr", "i", "img", "kbd", "li", "mark",
+    "ol", "p", "pre", "s", "small", "span", "strong", "sub", "sup", "table",
     "tbody", "td", "th", "thead", "tr", "u", "ul", "details", "summary",
     "figure", "figcaption",
 ]
@@ -63,6 +63,10 @@ ALLOWED_ATTRS = {
     "td": ["colspan", "rowspan", "align"],
     "th": ["colspan", "rowspan", "align", "scope"],
     "details": ["open"],
+    # The copy/expand buttons we inject around code blocks are controlled markup,
+    # not user content. Whitelist <button> (no event-handler attrs) so sanitize()
+    # doesn't strip them; their click handlers are bound by the template's JS.
+    "button": ["type"],
 }
 
 ALLOWED_PROTOCOLS = ["http", "https", "mailto", "data"]
@@ -401,9 +405,20 @@ def build_hero_image_html(meta: dict, md_dir: Path) -> str:
     return ""
 
 
-def build(markdown_path: Path, metadata_path: Path, output_path: Path) -> Path:
+def build(
+    markdown_path: Path,
+    metadata_path: Path,
+    output_path: Path,
+    image_base_dir: Path | None = None,
+) -> Path:
     markdown_text = markdown_path.read_text(encoding="utf-8")
     meta = read_metadata(metadata_path)
+
+    # Relative image paths in the markdown body resolve against image_base_dir.
+    # Defaults to the markdown file's own folder, but when the source is a temp
+    # file (pasted string / chat-produced markdown) the caller must pass the
+    # ORIGINAL markdown_dir here, otherwise relative images won't be found.
+    img_base = image_base_dir or markdown_path.parent
 
     # Sectionize the ORIGINAL markdown. These slices are only used as a fallback
     # for sections that don't supply a rewritten `body_markdown`. Mermaid blocks
@@ -432,7 +447,7 @@ def build(markdown_path: Path, metadata_path: Path, output_path: Path) -> Path:
         # the rewritten body and the legacy slice).
         body_source, _ = extract_mermaid(body_source)
         rendered = render_markdown_chunk(body_source)
-        rendered = inline_local_images(rendered, markdown_path.parent)
+        rendered = inline_local_images(rendered, img_base)
         rendered = wrap_code_blocks(rendered)
         # Sanitize untrusted markdown-rendered HTML first, THEN inject our own
         # controlled glossary tooltip spans (whose payload is html-escaped metadata).
@@ -445,7 +460,7 @@ def build(markdown_path: Path, metadata_path: Path, output_path: Path) -> Path:
             "diagrams": section_diagrams.get(s_meta["id"], []),
         })
 
-    hero_image_html = build_hero_image_html(meta, markdown_path.parent)
+    hero_image_html = build_hero_image_html(meta, img_base)
 
     # Detect mermaid usage
     has_mermaid = bool(meta["auto_diagrams"]) or any(
@@ -492,6 +507,15 @@ def main():
     parser.add_argument("markdown", type=Path)
     parser.add_argument("metadata", type=Path)
     parser.add_argument("output", type=Path)
+    parser.add_argument(
+        "--image-base",
+        type=Path,
+        default=None,
+        help="Base directory for resolving relative image paths in the markdown "
+        "body. Defaults to the markdown file's folder; pass the ORIGINAL "
+        "markdown_dir when the markdown source is a temp file (pasted string or "
+        "chat-produced content) so relative images still resolve.",
+    )
     args = parser.parse_args()
 
     if not args.markdown.exists():
@@ -501,7 +525,7 @@ def main():
         print(f"ERROR: metadata not found: {args.metadata}", file=sys.stderr)
         sys.exit(1)
 
-    out = build(args.markdown, args.metadata, args.output)
+    out = build(args.markdown, args.metadata, args.output, image_base_dir=args.image_base)
     print(str(out))
 
 

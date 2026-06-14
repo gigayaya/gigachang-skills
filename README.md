@@ -10,7 +10,7 @@ Each skill auto-triggers when its `description` matches what you're asking for, 
 |---|---|
 | [markdown-to-html-report](./skills/markdown-to-html-report/) | Converts long AI-generated markdown (code reviews, plans, specs) into a single self-contained HTML report — TL;DR, sticky TOC, semantic callouts, syntax highlighting, mermaid diagrams, dark mode |
 | [session-reflection](./skills/session-reflection/) | Reflects on the current session — finds where Claude's output was rejected or corrected, distills the root causes, and proposes project rules (into `CLAUDE.md` or your existing rule system) so the same mistake doesn't recur. No dependencies |
-| [ab-review](./skills/ab-review/) | Two-sided "AB" code review — dispatches a Pro reviewer (arguing the change is mergeable) and a Con reviewer (arguing it is not) in parallel, each citing concrete evidence from the diff, then hands both reports to the main agent to judge. Manual-trigger, no dependencies |
+| [ab-review](./skills/ab-review/) | Two-sided "AB" code review — dispatches a Pro reviewer (arguing the change is mergeable) and a Con reviewer (arguing it is not) in parallel, each citing concrete evidence from the diff, then verifies every cited snippet against the repo before the main agent judges. Manual-trigger, no dependencies |
 | [scope-research](./skills/scope-research/) | Surveys the codebase against a proposed requirement and reports the concrete facts a reader needs to assess scope themselves — affected files, callers, prior similar changes, current test state, conventions in use, with honest per-touchpoint LOC ranges. States facts only, never issues t-shirt sizes or risk ratings. Manual-trigger, no dependencies |
 
 ---
@@ -53,7 +53,7 @@ pip install -r ${CLAUDE_PLUGIN_ROOT}/skills/markdown-to-html-report/scripts/requ
 
 For full setup options (uv, venv, troubleshooting), see [`skills/markdown-to-html-report/README.md`](./skills/markdown-to-html-report/README.md#required-dependencies).
 
-The other three skills (`session-reflection`, `ab-review`, `scope-research`) have no third-party dependencies — `session-reflection` uses standard-library Python only, and the other two are pure LLM + built-in tools.
+The other three skills (`session-reflection`, `ab-review`, `scope-research`) have no third-party dependencies — `session-reflection` and `ab-review` ship standard-library-only Python helpers (no install), and `scope-research` is pure LLM + built-in tools.
 
 ---
 

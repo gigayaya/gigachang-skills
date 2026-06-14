@@ -65,6 +65,16 @@ python ${CLAUDE_PLUGIN_ROOT}/skills/markdown-to-html-report/scripts/render_repor
   ./claude-reports/$(date +%Y%m%d-%H%M%S)-<slug>.html
 ```
 
+**If the markdown source is a temp file** (a pasted string or markdown you
+produced in chat, written to `./claude-reports/.tmp-input.md`), the source's
+folder is no longer where its relative images live. Pass the original
+`markdown_dir` from Step 1 so relative images still resolve:
+```bash
+  ... --image-base <markdown_dir>
+```
+When the source is a real file the user gave, omit the flag — it defaults to
+the file's own folder.
+
 The script prints the absolute output path on stdout. The metadata contract is unchanged — the renderer behaves identically whether the metadata was authored inline or by the sub-agent.
 
 ### Step 4 — Cleanup and report

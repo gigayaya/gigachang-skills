@@ -83,7 +83,20 @@ Your final message must be exactly this structure:
 <the single most compelling evidence item, by ID>
 ## Honest weakness of my side
 <where the case against merging is least convincing — stated plainly>
+## Evidence (machine-readable)
+```json
+[
+  {"id": "E1", "side": "CON", "file": "<path>", "line": "<line or range, e.g. 42 or 40-45>", "snippet": "<verbatim code, exactly as it appears in the file>", "strength": "strong|moderate|weak"}
+]
+```
 ```
 
 The **Honest weakness** line is required. It keeps you calibrated and gives the
 main agent a fairness signal — omitting it or faking it defeats the review.
+
+The **machine-readable JSON block** must list exactly the same evidence items as
+the prose `## Evidence` section, one object per item. The `snippet` must be the
+**verbatim** text as it appears in the cited file (not a paraphrase, and without
+diff `+`/`-` prefixes) — the main agent runs a script that greps each snippet
+against the repo to confirm your citations are real. A fabricated or misquoted
+snippet will be flagged. Keep snippets short (one to a few lines) so they match.
