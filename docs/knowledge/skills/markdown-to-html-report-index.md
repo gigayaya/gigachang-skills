@@ -9,6 +9,7 @@ Converts long markdown into a self-contained magazine-style HTML report (TL;DR h
 | `skills/markdown-to-html-report/README.md` | User-facing docs, standalone CLI usage, dependency setup | Changing user-visible behaviour or install steps |
 | `commands/html-report.md` | Slash command `/html-report` that invokes this skill | Renaming the command, editing its `description` / `argument-hint` / invocation prompt |
 | `skills/markdown-to-html-report/scripts/render_report.py` | Main renderer: reads markdown + metadata.json, emits self-contained HTML (sanitize, tooltip, SVG hero) | Changing transformation logic, fixing script bugs |
+| `skills/markdown-to-html-report/scripts/verify_fidelity.py` | Deterministic fidelity checker: compares metadata.json against the source (section coverage, verbatim code blocks, quotes, fact tokens) before rendering | Changing what counts as a fidelity error/warning |
 | `skills/markdown-to-html-report/scripts/requirements.txt` | Python dependencies (markdown, jinja2, bleach, …) | Bumping or adding a Python dependency |
 | `skills/markdown-to-html-report/templates/report.html.j2` | Jinja2 template for the final HTML report structure | Changing overall report layout or adding sections |
 | `skills/markdown-to-html-report/styles/magazine.css` | Core stylesheet: layout, dark mode, collapsible sections, semantic colour palette | Changing visual style or colour rules |

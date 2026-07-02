@@ -46,9 +46,40 @@ In a single `Agent` call, dispatch `subagent_type: markdown-report-analyst` and 
 
 The agent already carries the full contract — the metadata schema, the body-rewriting rules, the hero-SVG rules, the glossary/diagram rules, the same-language rule, and the no-fabrication rule — defined in `agents/markdown-report-analyst.md`. **Do not re-specify any of that here, and do not do the rewriting yourself.**
 
-When it returns, it reports the metadata path it wrote, the `slug` it chose, the section count, estimated read minutes, and the must-read/diagram counts. Use the metadata path and slug in Step 3, and the counts in your Step 4 message.
+When it returns, it reports the metadata path it wrote, the `slug` it chose, the section count, estimated read minutes, and the must-read/diagram counts. Use the metadata path and slug in Steps 3–4, and the counts in your Step 5 message.
 
-### Step 3 — Run the renderer
+### Step 3 — Verify fidelity (mandatory)
+
+The analyst is a rewriter, so its output must be checked, not trusted. Run
+the verifier (standard-library Python, no install needed):
+
+```bash
+python ${CLAUDE_PLUGIN_ROOT}/skills/markdown-to-html-report/scripts/verify_fidelity.py \
+  <markdown_path> ./claude-reports/.tmp-report.json --json
+```
+
+It compares the metadata against the source. **Errors** (exit 1): a source
+H2/H3 section that no section covers, merges, or declares omitted; a
+fabricated section heading; a source code block missing or altered in the
+rewritten bodies; a `must_read_quote` not verbatim in its section body.
+**Warnings** (exit 0): declared omissions (with the analyst's reason), source
+fact tokens (numbers, inline code, paths, URLs) missing from the rewritten
+report, language drift.
+
+Handle the result:
+
+1. **No errors** → proceed to Step 4. Use judgment on warnings; mention
+   notable ones (declared omissions, lost fact tokens) in your Step 5
+   message.
+2. **Errors** → send the full JSON report back to the **same** analyst agent
+   via `SendMessage`, asking it to repair the metadata file in place (its
+   agent file defines the repair protocol). Re-run the verifier. At most
+   **2** repair rounds.
+3. **Still failing after 2 rounds** → show the user the unresolved errors and
+   ask whether to render anyway (with the issues noted) or abort. Never
+   silently render a report that failed verification.
+
+### Step 4 — Run the renderer
 
 First-time setup (one-shot per machine):
 ```bash
@@ -77,7 +108,7 @@ the file's own folder.
 
 The script prints the absolute output path on stdout. The metadata contract is unchanged — the renderer behaves identically whether the metadata was authored inline or by the sub-agent.
 
-### Step 4 — Cleanup and report
+### Step 5 — Cleanup and report
 
 - Delete the `.tmp-*.md` and `.tmp-*.json` files
 - If `./claude-reports/` was just created, remind the user once: *"I created `./claude-reports/` for HTML reports — consider adding it to .gitignore."*
@@ -88,7 +119,7 @@ Example final message:
 
 ## Notes
 
-- **The analyst sub-agent owns Step 2.** Reading, understanding, and rewriting the article — plus authoring `metadata.json` — all live in `agents/markdown-report-analyst.md`. This skill orchestrates (resolve source → dispatch agent → render → report); it does not rewrite the article inline. If you need to change *how* the article is understood or rewritten (rewrite intensity, schema, SVG/glossary rules), edit the agent file, not this one.
+- **The analyst sub-agent owns Step 2.** Reading, understanding, and rewriting the article — plus authoring `metadata.json` — all live in `agents/markdown-report-analyst.md`. This skill orchestrates (resolve source → dispatch agent → verify → render → report); it does not rewrite the article inline. If you need to change *how* the article is understood or rewritten (rewrite intensity, schema, SVG/glossary rules), edit the agent file, not this one.
 - The output is fully self-contained: opens offline, all CSS / JS / hero SVG inlined. Exception: image URLs (http/https) inside the markdown body remain as links and need network to display.
 - mermaid.js (~3 MB) is only inlined when the report actually contains diagrams — keep `auto_diagrams` empty if the content doesn't need diagrams.
 - highlight.js is only inlined when there's at least one code block.

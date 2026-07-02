@@ -79,8 +79,12 @@ Produce a `metadata.json` matching this schema:
       "summary": "string — 1-2 sentence editorial lead-in shown above the section body (italic, not a card)",
       "body_markdown": "string — REQUIRED. Your rewritten, distilled prose for this section, in markdown. This REPLACES the source text in the rendered report. Do NOT include the section heading line. See Body rewriting rules below.",
       "must_read_quotes": ["0-2 VERBATIM strings copied from THIS section's body_markdown. Use sparingly — see rules. Most sections should have none."],
+      "merged_source_headings": ["optional — source headings whose content this section absorbed"],
       "estimated_minutes": 2
     }
+  ],
+  "omitted_headings": [
+    { "heading": "exact source heading you dropped", "reason": "one line on why" }
   ],
   "callouts": [
     { "section_id": "...", "level": "critical | warning | info | good | note", "text": "..." }
@@ -151,12 +155,27 @@ restructure freely, but preserve every fact.
      </svg>
      ```
 9. Language: if the source is Chinese, all `tldr`, `summary`, `plain_explanation`, `analogy`, `next_actions` (and any embedded SVG text) MUST be in the source language.
+10. **Every source H2/H3 must be accounted for** — as a section `heading`, in
+    some section's `merged_source_headings`, or in `omitted_headings` with a
+    reason. Silent omission is an error the verifier will bounce back to you;
+    declared omission is a judgment the main agent and user get to see.
 
 ## No-fabrication rule
 
 Everything in `body_markdown` and every quote must trace back to the source.
 Rewrite freely, but never invent facts, numbers, conclusions, or code. If the
 source is thin, a short honest section beats padded filler.
+
+## Verification and repair
+
+Your metadata is mechanically verified against the source
+(`scripts/verify_fidelity.py`) before anything is rendered: section coverage,
+verbatim code blocks, quote-in-body, fact-token retention, and language
+drift. If verification fails, the main agent sends you the JSON failure
+report (`{"errors": [...], "warnings": [...]}`, each item with a `check` ID
+and a `detail`). Repair by editing the metadata file **in place at the same
+path**: fix exactly the listed problems, change nothing else, re-validate the
+JSON, and reply with the same summary block as a normal run.
 
 ## Output
 

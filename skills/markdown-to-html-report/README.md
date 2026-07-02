@@ -52,8 +52,9 @@ pip install -r .../requirements.txt
 ## How Claude uses it
 
 1. The skill dispatches the bundled **`markdown-report-analyst` sub-agent**, which reads the source markdown and produces a `metadata.json`. Crucially, this includes a **rewritten prose `body_markdown` for each section** — the source is distilled and re-authored into flowing article prose, not copy-pasted. The metadata also carries the TL;DR, per-section overviews, sparing must-read quotes, callouts, concept explanations, optional auto-generated mermaid diagrams, and next actions. The agent and the metadata schema are documented in [`agents/markdown-report-analyst.md`](../../agents/markdown-report-analyst.md).
-2. The renderer script reads the source plus `metadata.json` and emits a self-contained HTML, using each section's `body_markdown` as the body (falling back to a verbatim slice of the source only when a section omits it). Code blocks are always reproduced verbatim.
-3. The main agent runs the renderer and reports the `file://` path back to the user.
+2. A deterministic verifier (`scripts/verify_fidelity.py`, stdlib-only) checks the metadata against the source — section coverage, verbatim code blocks, quotes, fact-token retention. On errors the analyst is asked to repair its metadata (at most two rounds) before anything is rendered.
+3. The renderer script reads the source plus `metadata.json` and emits a self-contained HTML, using each section's `body_markdown` as the body (falling back to a verbatim slice of the source only when a section omits it). Code blocks are always reproduced verbatim.
+4. The main agent runs the renderer and reports the `file://` path back to the user.
 
 The split is deliberate and now three-way: the **analyst sub-agent** does the *understanding and editing* (it rewrites the prose), the **script** does the deterministic *transformation* (markdown → safe, styled HTML), and the **skill** orchestrates the two. The `metadata.json` is the clean contract between them, which keeps the script unit-testable and the comprehension work isolated in its own agent context.
 
@@ -65,6 +66,7 @@ markdown-to-html-report/
 ├── README.md                 # this file
 ├── scripts/
 │   ├── render_report.py      # main converter; CLI: <md> <metadata.json> <out.html>
+│   ├── verify_fidelity.py    # fidelity checker; CLI: <md> <metadata.json> [--json]
 │   └── requirements.txt      # Python deps
 ├── templates/
 │   └── report.html.j2        # Jinja2 template (page shell + interactivity JS)
@@ -86,6 +88,14 @@ python scripts/render_report.py <markdown_path> <metadata.json> <output.html>
 ```
 
 It prints the absolute output path on stdout.
+
+The fidelity verifier is also a plain CLI (stdlib-only, no install):
+
+```bash
+python scripts/verify_fidelity.py <markdown_path> <metadata.json> [--json]
+```
+
+Exit 0 = clean or warnings only, 1 = fidelity errors, 2 = usage/IO error.
 
 ## Customizing
 
